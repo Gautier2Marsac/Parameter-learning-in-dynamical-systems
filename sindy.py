@@ -26,3 +26,27 @@ model = ps.SINDy(
 
 model.fit(x_train, t=dt)
 model.print()
+
+# 3. Extraction et affichage des constantes estimées
+coeffs = model.coefficients()
+
+# Pour le système de Lorenz: dx/dt = σ(y - x), dy/dt = x(ρ - z) - y, dz/dt = xy - βz
+# Extraction des coefficients (les indices dépendent de la structure de la bibliothèque)
+# coeffs[i, j] où i est l'équation et j le terme de la bibliothèque
+
+# σ estimé: coefficient de y dans l'équation x' (ou de x0 dans x1)
+sigma_estimated = coeffs[0, 2]  # Coefficient de x1 dans (x0)'
+
+# ρ estimé: coefficient de x dans l'équation y' 
+rho_estimated = coeffs[1, 1]  # Coefficient de x0 dans (x1)'
+
+# β estimé: coefficient de -z dans l'équation z'
+beta_estimated = -coeffs[2, 3]  # Coefficient de x2 dans (x2)' (avec signe inversé)
+
+print("\n" + "="*50)
+print("CONSTANTES ESTIMÉES vs VRAIES VALEURS")
+print("="*50)
+print(f"σ (sigma) : estimé = {sigma_estimated:.3f}, vrai = 10.000")
+print(f"ρ (rho)   : estimé = {rho_estimated:.3f}, vrai = 28.000")
+print(f"β (beta)  : estimé = {beta_estimated:.3f}, vrai = {8/3:.3f}")
+print("="*50)
