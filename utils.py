@@ -21,6 +21,22 @@ def plot_observations(observations, dt=None, var_names=None):
     plt.tight_layout()
     plt.show()
 
+def plot_estim_evolution(theta_estim_vec, dt=None, var_names=None):
+    var_names = ['$X_0$', '$X_1$', '$X_2$']
+
+    time = np.arange(theta_estim_vec.shape[0])
+    plt.figure(figsize=(15, 4))
+
+    for i in range(3):
+        plt.subplot(1, 3, i+1)
+        plt.plot(time, theta_estim_vec[:, i])
+        plt.title(f'Variable {var_names[i]}')
+        plt.xlabel('Time step')
+        plt.ylabel('Value')
+
+    plt.tight_layout()
+    plt.show()
+
 
 def plot_3d_trajectory(observations, var_names=None):
     var_names = ['$X_0$', '$X_1$', '$X_2$']
@@ -60,3 +76,11 @@ def solve_lorenz(t_0 = 0, t_f=10, dt=0.001, X_0 = [-8, 8, 27]):
 def evaluate(theta_estim, theta):
     erreur_rel = np.abs((theta_estim - theta) / theta) * 100
     print(f"L'erreur relative sur σ, ρ, β est de : {erreur_rel[0]}, {erreur_rel[1]}, {erreur_rel[2]}")
+
+
+def sgd_update(theta, config, grad):
+    step_size = config['Optimizer'].getfloat('lr')
+
+    return theta - step_size * grad
+
+
