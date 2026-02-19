@@ -8,9 +8,9 @@ def lorenz(t, x, sigma=10, beta=8/3, rho=28):
             x[0] * (rho - x[2]) - x[1], 
             x[0] * x[1] - beta * x[2]]
 
-dt = 0.1
+dt = 1.0
 noise_magnitude = 0.0
-t_train = np.arange(0, 10, dt)
+t_train = np.arange(0, 100, dt)
 x0_train = [-8, 8, 27]
 sol = solve_ivp(lorenz, (t_train[0], t_train[-1]), x0_train, t_eval=t_train)
 print(sol.y.shape)  # Vérification de la forme des données

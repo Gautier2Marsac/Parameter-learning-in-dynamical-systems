@@ -3,78 +3,74 @@ from scipy.integrate import solve_ivp
 import pysindy as ps
 import matplotlib.pyplot as plt
 
+# 1. Définition du système (Lorenz-63)
 def lorenz(t, x, sigma=10, beta=8/3, rho=28):
     return [sigma * (x[1] - x[0]), 
-            x[0] * (rho - x[2]) - x[1], 
+            x[0] * (rho - x[2]) - x[1],
             x[0] * x[1] - beta * x[2]]
 
-# --- Paramètres du test ---
-dts = [1.0, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1, 0.07, 0.05, 0.03, 0.01, 0.005, 0.001]
-n_trials = 100  # Nombre de répétitions par dt
-noise_magnitude = 1.5 
-true_vals = {'sigma': 10.0, 'rho': 28.0, 'beta': 8/3}
+# 2. Paramètres de l'expérience rigoureuse
+# On fixe l'Horizon Physique (T_max) pour que tous les modèles voient la même "quantité" de physique
+T_MAX = 200 
+dts = [1.0,0.9,0.8,0.7,0.6,0.5,0.4,0.3,0.2,0.1,0.09,0.08,0.07,0.06,0.05,0.04,0.03,0.02,0.01,0.005,0.001,0.00001] # Gamme de pas de temps
+n_trials = 50       # Nombre d'essais pour la robustesse statistique
+noise_level =  0  # Bruit fixe pour évaluer la résistance du dt
 
-# Listes pour stocker les moyennes finales
-avg_err_sigma, avg_err_rho, avg_err_beta, avg_err_mre = [], [], [], []
+stats = {dt: [] for dt in dts}
 
-print(f"Lancement de l'étude statistique ({n_trials} essais par dt)...")
+print(f"Lancement du protocole à Horizon Fixe (T={T_MAX}s)...")
 
 for dt in dts:
-    trial_sigma, trial_rho, trial_beta = [], [], []
+    print(dt)
+    # Pour chaque dt, on génère la grille temporelle couvrant exactement T_MAX
+    t_eval = np.arange(0, T_MAX, dt)
     
-    # 1. Génération de la trajectoire "propre" (une seule fois par dt pour gagner du temps)
-    t_train = np.arange(0, 10, dt)
-    x0_train = [-8, 8, 27]
-    sol = solve_ivp(lorenz, (t_train[0], t_train[-1]), x0_train, t_eval=t_train)
+    # Vérification de sécurité : si dt est trop grand, on risque d'avoir trop peu de points
+    if len(t_eval) < 20: 
+        print(f"Warning: dt={dt} donne seulement {len(t_eval)} points. Ignoré.")
+        stats[dt] = [np.nan] * n_trials
+        continue
+
+    # Génération de la vérité terrain (Trajectoire pure sur T_MAX)
+    # On intègre une seule fois par dt pour avoir la grille exacte
+    sol = solve_ivp(lorenz, (0, T_MAX), [-8, 8, 27], t_eval=t_eval, rtol=1e-10, atol=1e-10)
     x_pure = sol.y.T
 
     for _ in range(n_trials):
-        # 2. Ajout d'un nouveau bruit aléatoire à chaque essai
-        x_noisy = x_pure + noise_magnitude * np.random.normal(size=x_pure.shape)
+        # Ajout du bruit (Indépendant du dt, dépendant de la mesure)
+        x_noisy = x_pure + noise_level * np.random.normal(size=x_pure.shape)
 
-        # 3. Application de SINDy
+        # SINDy configuration
         model = ps.SINDy(feature_library=ps.PolynomialLibrary(degree=2), 
-                         optimizer=ps.STLSQ(threshold=0.1))
+                         optimizer=ps.STLSQ(threshold=0.01))
         
         try:
             model.fit(x_noisy, t=dt)
             coeffs = model.coefficients()
             
-            # Extraction et calcul d'erreur
-            s_est = coeffs[0, 2]
-            r_est = coeffs[1, 1]
-            b_est = -coeffs[2, 3]
+            # Calcul de l'erreur relative moyenne sur les 3 paramètres
+            s, r, b = coeffs[0, 2], coeffs[1, 1], -coeffs[2, 3]
+            err_s = abs(s - 10)/10
+            err_r = abs(r - 28)/28
+            err_b = abs(b - 8/3)/(8/3)
             
-            trial_sigma.append(abs(s_est - 10) / 10 * 100)
-            trial_rho.append(abs(r_est - 28) / 28 * 100)
-            trial_beta.append(abs(b_est - (8/3)) / (8/3) * 100)
+            # Score global (MRE)
+            stats[dt].append((err_s + err_r + err_b) / 3 * 100) # En pourcentage
         except:
-            continue # On ignore les échecs de convergence
+            stats[dt].append(100.0) # Échec considéré comme 100% d'erreur
 
-    # Calcul des moyennes pour ce dt (si au moins un essai a réussi)
-    if trial_sigma:
-        m_s = np.mean(trial_sigma)
-        m_r = np.mean(trial_rho)
-        m_b = np.mean(trial_beta)
-        avg_err_sigma.append(m_s)
-        avg_err_rho.append(m_r)
-        avg_err_beta.append(m_b)
-        avg_err_mre.append((m_s + m_r + m_b) / 3)
-    else:
-        for l in [avg_err_sigma, avg_err_rho, avg_err_beta, avg_err_mre]:
-            l.append(np.nan)
+# --- Visualisation ---
+means = [np.nanmean(stats[dt]) for dt in dts]
+stds = [np.nanstd(stats[dt]) for dt in dts]
 
-# --- Affichage des résultats moyens ---
-plt.figure(figsize=(12, 7))
-plt.semilogx(dts, avg_err_sigma, 'r--o', label='Moyenne $\sigma$ (Sigma)', alpha=0.6)
-plt.semilogx(dts, avg_err_rho, 'g--o', label='Moyenne $\\rho$ (Rho)', alpha=0.6)
-plt.semilogx(dts, avg_err_beta, 'b--o', label='Moyenne $\\beta$ (Beta)', alpha=0.6)
-plt.semilogx(dts, avg_err_mre, 'ko-', label='MRE Globale Moyenne', linewidth=2.5)
-
-plt.gca().invert_xaxis()
-plt.xlabel('Pas de temps (dt)')
-plt.ylabel('Erreur Relative Moyenne (%)')
-plt.title(f'Robustesse de SINDy sur Lorenz-63 (Moyenne sur {n_trials} essais, Bruit={noise_magnitude})')
+plt.figure(figsize=(10, 6))
+plt.errorbar(dts, means, yerr=stds, fmt='-o', color='teal', ecolor='gray', capsize=5, label='Erreur MRE (%)')
+plt.xscale('log')
+plt.gca().invert_xaxis() # Du plus grand dt (gauche) au plus précis (droite)
+plt.xlabel('Pas de temps (dt) [Log scale]')
+plt.ylabel('Erreur Moyenne (%)')
+plt.title(f'Performance de SINDy à Horizon Physique Constant (T={T_MAX}s)')
+plt.axhline(0, color='k', linestyle='--', linewidth=0.5)
+plt.grid(True, which='both', linestyle='--', alpha=0.7)
 plt.legend()
-plt.grid(True, which="both", ls="-")
 plt.show()
