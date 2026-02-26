@@ -19,6 +19,8 @@ nb_loops = [0.1, 0.2, 0.3, 0.4, 0.5, 1, 2, 5, 10, 20, 50, 100]
 # Nouveaux paramètres pour la robustesse
 n_trials = 10        # 10 essais par case suffisent pour lisser l'effet du bruit
 noise_level = 0.5   # Ajout d'un bruit pour justifier les répétitions&&
+epsilon = 1e-6  # Ta régularisation Julia
+threshold = 0.1 # Seuil pour la parcimonie (SINDy)
 
 error_matrix = np.zeros((len(dts), len(nb_loops)))
 
@@ -48,27 +50,37 @@ for i, dt in enumerate(dts):
             # Ajout d'un NOUVEAU bruit à chaque itération
             x_noisy = x_pure + noise_level * np.random.normal(size=x_pure.shape)
             
-            # Application de SINDy
-            feature_library = ps.PolynomialLibrary(degree=2)
-            optimizer = ps.STLSQ(threshold=0.1) # Algorithme de seuillage itératif
-            model = ps.SINDy(
-                feature_library=feature_library,
-                optimizer=optimizer
-            )
-            
+            # Calcul de la dérivée temporelle (approximée par les différences finies)
+            x_dot = np.gradient(x_noisy, dt, axis=0)
+
+            x_f, y_f, z_f = x_noisy[:, 0], x_noisy[:, 1], x_noisy[:, 2]
+            # Ordre: [1, x, y, z, x^2, xy, xz, y^2, yz, z^2]
+            Theta = np.column_stack([
+                np.ones_like(x_f), x_f, y_f, z_f, 
+                x_f**2, x_f*y_f, x_f*z_f, y_f**2, y_f*z_f, z_f**2
+            ])
+
+            # M = F'F + eps*I
+            M = Theta.T @ Theta + epsilon * np.eye(Theta.shape[1])
+            # a_hat = M \ (F' * dXdt)
+            Xi = np.linalg.solve(M, Theta.T @ x_dot)
+
+            Xi[np.abs(Xi) < threshold] = 0
+
+
             #optimizer=ps.STLSQ(threshold=0.1)
             try:
-                model.fit(x_noisy, t=dt)
-                coeffs = model.coefficients()
+                # Lorenz: dx/dt = 10(y-x), dy/dt = 28x - y - xz, dz/dt = xy - 8/3z
+                s_est = Xi[2, 0]   # Coeff de y dans dx/dt
+                r_est = Xi[1, 1]   # Coeff de x dans dy/dt
+                b_est = -Xi[3, 2]  # Coeff de z dans dz/dt (index 3 car c'est le terme linéaire z)
                 
-                if np.all(coeffs == 0):
-                    cell_errors.append(100.0)
-                else:
-                    s, r, b = coeffs[0, 2], coeffs[1, 1], -coeffs[2, 3]
-                    err = (abs(s-10)/10 + abs(r-28)/28 + abs(b-(8/3))/(8/3)) / 3 * 100
-                    cell_errors.append(min(err, 100.0))
+                err = (abs(s_est-10)/10 + abs(r_est-28)/28 + abs(b_est-(8/3))/(8/3)) / 3 * 100
+                cell_errors.append(min(err, 100.0))
             except:
                 cell_errors.append(100.0)
+        
+        error_matrix[i, j] = np.mean(cell_errors)
         
         # 3. Moyenne des erreurs pour cette case précise
         error_matrix[i, j] = np.mean(cell_errors)
