@@ -21,19 +21,27 @@ def plot_observations(observations, dt=None, var_names=None):
     plt.tight_layout()
     plt.show()
 
-def plot_estim_evolution(theta_estim_vec, dt=None, var_names=None):
-    var_names = ['$X_0$', '$X_1$', '$X_2$']
+def plot_estim_evolution(theta_estim_vec, theta, dt=None, var_names=None):
+    # Assuming epoch_hist, sigma_hist, rho_hist, beta_hist are defined
+    plt.plot(theta_estim_vec[:,0], label=f'σ (vrai={theta[0]:.2f})', lw=1.5)
+    plt.plot(theta_estim_vec[:,1], label=f'ρ (vrai={theta[1]:.2f})', lw=1.5)
+    plt.plot(theta_estim_vec[:,1], label=f'β (vrai={theta[2]:.2f})', lw=1.5)
 
-    time = np.arange(theta_estim_vec.shape[0])
-    plt.figure(figsize=(15, 4))
+    # Horizontal lines for true values
+    plt.axhline(y=theta[0], color='C0', ls=':', alpha=0.5)
+    plt.axhline(y=theta[1], color='C1', ls=':', alpha=0.5)
+    plt.axhline(y=theta[2], color='C2', ls=':', alpha=0.5)
 
-    for i in range(3):
-        plt.subplot(1, 3, i+1)
-        plt.plot(time, theta_estim_vec[:, i])
-        plt.title(f'Variable {var_names[i]}')
-        plt.xlabel('Time step')
-        plt.ylabel('Value')
+    # Labels and title
+    plt.xlabel('Epoch')
+    plt.ylabel('Valeur')
+    plt.title('Evolution des paramètres physiques')
 
+    # Legend and grid
+    plt.legend()
+    plt.grid(True, alpha=0.3)
+
+    # Layout and display
     plt.tight_layout()
     plt.show()
 
