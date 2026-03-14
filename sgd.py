@@ -180,6 +180,7 @@ for key, value in trial.params.items():
 theta_estim, theta_estim_vec, grads = main(trial.params["window"], 
                                            trial.params["decay"], 
                                            trial.params["nbr_epochs"], 
+                                           noise_var,
                                            np.array([trial.params["lr_0"], trial.params["lr_1"], trial.params["lr_2"]]), 
                                            np.array([trial.params["clip_0"], trial.params["clip_1"], trial.params["clip_2"]]))
 
