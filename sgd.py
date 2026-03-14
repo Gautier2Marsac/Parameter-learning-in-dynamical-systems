@@ -149,9 +149,9 @@ def objective(trial):
     evaluate(theta_estim, theta)
 
     # result = np.mean((theta_estim - theta)**2)
-    # result = np.mean(((theta_estim - theta)/theta)**2)*100
+    result = np.mean(((theta_estim - theta)/theta)**2)*100
 
-    result = np.var(grads)
+    # result = np.var(grads)
     # result = np.mean(np.abs(grads))
 
     # # this dosn't work worked the better model does not have the min of this
@@ -159,7 +159,7 @@ def objective(trial):
 
     # result = np.mean(np.abs(grads[-50:]))
     #result = np.mean(np.linalg.norm(grads, axis=1))
-    print(np.mean(((theta_estim - theta)/theta)**2)*100)
+    # print(np.mean(((theta_estim - theta)/theta)**2)*100)
 
     return result
 
