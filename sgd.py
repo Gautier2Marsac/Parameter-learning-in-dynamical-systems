@@ -64,9 +64,9 @@ def decay_grad(grads, current_grad_idx, clip_value=np.array([25,10,10]), window=
 
     grad = grads[current_grad_idx]
 
-    # --- soft clipping ---
-    grad = clip_value * np.tanh(grad / clip_value)
-    grads[current_grad_idx] = grad
+    # # --- soft clipping ---
+    # grad = clip_value * np.tanh(grad / clip_value)
+    # grads[current_grad_idx] = grad
 
     # --- window selection ---
     start = max(0, current_grad_idx - window + 1)
@@ -82,7 +82,7 @@ def decay_grad(grads, current_grad_idx, clip_value=np.array([25,10,10]), window=
     weights = weights / np.sum(weights)
 
     # --- weighted average of normalized grads ---
-    smoothed_grad = np.sum(window_grads_norm * weights[:, None], axis=0)
+    smoothed_grad = np.sum(window_grads_norm, axis=0)
 
     return smoothed_grad
 
