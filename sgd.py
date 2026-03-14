@@ -96,8 +96,8 @@ def main(window = 40,
 
     nbr_epochs = int(epochs * N)
     A = np.array([[-1, 1, 0],
-                [1 , 0, 0],
-                [0 , 0, -1]])
+                  [1 , 0, 0],
+                  [0 , 0, -1]])
 
     estim_obs = observations.copy() + np.random.normal(0, var, (N, 3))
 
@@ -123,6 +123,7 @@ config.read('config.ini')
 noise_var = config['Optimizer'].getfloat('var')
 
 snr = compute_snr(observations, noise_var)
+print(f"Noise variance is {noise_var}")
 print(f"SNR (dB) for each dimension: {snr}")
 print(f"Average SNR (dB): {np.mean(snr):.2f}")
 
@@ -132,17 +133,17 @@ def objective(trial):
 
     window = trial.suggest_int('window', 10, 100)  
     decay = trial.suggest_float('decay', 0.1, 0.99) 
-    nbr_epochs = trial.suggest_float('nbr_epochs', 0.5, 3) 
+    nbr_epochs = trial.suggest_float('nbr_epochs', 0.5, 4) 
 
     lr = [
         trial.suggest_float('lr_0', 1e-4, 1e-3, log=True),
         trial.suggest_float('lr_1', 1e-4, 1e-3, log=True),
-        trial.suggest_float('lr_2', 1e-4, 1e-2, log=True)
+        trial.suggest_float('lr_2', 1e-4, 1e-3, log=True)
     ]
     clip_value = [
         trial.suggest_int('clip_0', 1, 40),
-        trial.suggest_int('clip_1', 1, 20),
-        trial.suggest_int('clip_2', 1, 20)
+        trial.suggest_int('clip_1', 1, 30),
+        trial.suggest_int('clip_2', 1, 30)
     ]
 
     theta_estim, theta_estim_vec, grads = main(window, decay, nbr_epochs, noise_var, np.array(lr), np.array(clip_value))
@@ -178,7 +179,7 @@ for key, value in trial.params.items():
 
 theta_estim, theta_estim_vec, grads = main(trial.params["window"], 
                                            trial.params["decay"], 
-                                           trial.params["nbr_epochs"]*2, 
+                                           trial.params["nbr_epochs"], 
                                            np.array([trial.params["lr_0"], trial.params["lr_1"], trial.params["lr_2"]]), 
                                            np.array([trial.params["clip_0"], trial.params["clip_1"], trial.params["clip_2"]]))
 
