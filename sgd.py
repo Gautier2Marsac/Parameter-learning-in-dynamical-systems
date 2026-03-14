@@ -72,18 +72,19 @@ def decay_grad(grads, current_grad_idx, clip_value=np.array([25,10,10]), window=
     start = max(0, current_grad_idx - window + 1)
     window_grads = grads[start:current_grad_idx + 1]
 
+    # --- normalize each gradient BEFORE smoothing ---
+    norms = np.linalg.norm(window_grads, axis=1, keepdims=True) + 1e-8
+    window_grads_norm = window_grads / norms
+
     # --- exponential decay weights ---
-    n = len(window_grads)
+    n = len(window_grads_norm)
     weights = decay ** np.arange(n)[::-1]
     weights = weights / np.sum(weights)
 
-    # --- weighted average ---
-    smoothed_grad = np.sum(window_grads * weights[:, None], axis=0)
+    # --- weighted average of normalized grads ---
+    smoothed_grad = np.sum(window_grads_norm * weights[:, None], axis=0)
 
-    grad_norm = smoothed_grad / (np.linalg.norm(smoothed_grad) + 1e-8)
-
-    return grad_norm
-
+    return smoothed_grad
 
 def main(window = 40, 
          decay = 0.8, 
