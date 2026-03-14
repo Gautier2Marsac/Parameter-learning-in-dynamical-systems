@@ -25,7 +25,7 @@ def plot_estim_evolution(theta_estim_vec, theta, dt=None, var_names=None):
     # Assuming epoch_hist, sigma_hist, rho_hist, beta_hist are defined
     plt.plot(theta_estim_vec[:,0], label=f'σ (vrai={theta[0]:.2f})', lw=1.5)
     plt.plot(theta_estim_vec[:,1], label=f'ρ (vrai={theta[1]:.2f})', lw=1.5)
-    plt.plot(theta_estim_vec[:,1], label=f'β (vrai={theta[2]:.2f})', lw=1.5)
+    plt.plot(theta_estim_vec[:,2], label=f'β (vrai={theta[2]:.2f})', lw=1.5)
 
     # Horizontal lines for true values
     plt.axhline(y=theta[0], color='C0', ls=':', alpha=0.5)
@@ -83,12 +83,16 @@ def solve_lorenz(t_0 = 0, t_f=10, dt=0.001, X_0 = [-8, 8, 27]):
 
 def evaluate(theta_estim, theta):
     erreur_rel = np.abs((theta_estim - theta) / theta) * 100
-    print(f"L'erreur relative sur σ, ρ, β est de : {erreur_rel[0]}, {erreur_rel[1]}, {erreur_rel[2]}")
+    print(f"L'erreur relative sur σ, ρ, β est de : {erreur_rel[0]:.6f}%, {erreur_rel[1]:.6f}%, {erreur_rel[2]:.6f}%")
+    return erreur_rel
 
 
-def sgd_update(theta, config, grad):
-    step_size = config['Optimizer'].getfloat('lr')
-
+def sgd_update(theta, grad, step_size):
     return theta - step_size * grad
 
 
+def compute_snr(signal, noise_variance):
+    signal_power = np.var(signal, axis=0)
+    noise_power = noise_variance
+    snr = 10 * np.log10(signal_power / noise_power)
+    return snr
