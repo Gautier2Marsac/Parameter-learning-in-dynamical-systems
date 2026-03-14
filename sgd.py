@@ -141,13 +141,14 @@ def objective(trial):
         trial.suggest_float('lr_1', 1e-4, 1e-3, log=True),
         trial.suggest_float('lr_2', 1e-4, 1e-3, log=True)
     ]
-    clip_value = [
-        trial.suggest_int('clip_0', 1, 40),
-        trial.suggest_int('clip_1', 1, 30),
-        trial.suggest_int('clip_2', 1, 30)
-    ]
+    # clip_value = [
+    #     trial.suggest_int('clip_0', 1, 40),
+    #     trial.suggest_int('clip_1', 1, 30),
+    #     trial.suggest_int('clip_2', 1, 30)
+    # ]
 
-    theta_estim, theta_estim_vec, grads = main(window, decay, nbr_epochs, noise_var, np.array(lr), np.array(clip_value))
+    # theta_estim, theta_estim_vec, grads = main(window, decay, nbr_epochs, noise_var, np.array(lr), np.array(clip_value))
+    theta_estim, theta_estim_vec, grads = main(window, decay, nbr_epochs, noise_var, np.array(lr))
     evaluate(theta_estim, theta)
 
     # result = np.mean((theta_estim - theta)**2)
