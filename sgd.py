@@ -121,7 +121,7 @@ def main(window = 40,
 
 config = configparser.ConfigParser()
 config.read('config.ini')
-noise_var = config['Params_var_001'].getfloat('var')
+noise_var = config['Params_var_01'].getfloat('var')
 
 snr = compute_snr(observations, noise_var)
 print(f"Noise variance is {noise_var}")
