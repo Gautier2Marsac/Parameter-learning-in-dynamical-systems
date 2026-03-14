@@ -91,3 +91,8 @@ def sgd_update(theta, grad, step_size):
     return theta - step_size * grad
 
 
+def compute_snr(signal, noise_variance):
+    signal_power = np.var(signal, axis=0)
+    noise_power = noise_variance
+    snr = 10 * np.log10(signal_power / noise_power)
+    return snr
