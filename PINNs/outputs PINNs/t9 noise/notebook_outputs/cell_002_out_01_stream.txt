@@ -1,0 +1,2 @@
+Ti (données)  : 50 points équirépartis dans [0, 1]
+Tf (résidus)  : 400 points aléatoires uniformes dans [0, 1]
