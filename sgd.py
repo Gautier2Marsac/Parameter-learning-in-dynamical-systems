@@ -149,7 +149,7 @@ def objective(trial):
     evaluate(theta_estim, theta)
 
     # result = np.mean((theta_estim - theta)**2)
-    result = np.mean(((theta_estim - theta)/theta)**2)
+    result = np.mean(((theta_estim - theta)/theta)**2)*100
 
     # result = np.var(grads)
     # result = np.mean(np.abs(grads))
@@ -174,3 +174,14 @@ print(f"  Value: {trial.value:.4f}")
 print("  Params: ")
 for key, value in trial.params.items():
     print(f"    {key}: {value}")
+
+
+theta_estim, theta_estim_vec, grads = main(trial.params["window"], 
+                                           trial.params["decay"], 
+                                           trial.params["nbr_epochs"]*2, 
+                                           np.array([trial.params["lr_0"], trial.params["lr_1"], trial.params["lr_2"]]), 
+                                           np.array([trial.params["clip_0"], trial.params["clip_1"], trial.params["clip_2"]]))
+
+
+
+sigma, rho, beta = evaluate(theta_estim, theta)
