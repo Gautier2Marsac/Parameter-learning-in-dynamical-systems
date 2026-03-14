@@ -1,0 +1,11 @@
+outputs PINN\t3 noise\summary.json
+outputs PINN\t3 noise\notebook_outputs\cell_002_out_01_stream.txt
+outputs PINN\t3 noise\notebook_outputs\cell_003_out_01_stream.txt
+outputs PINN\t3 noise\notebook_outputs\cell_004_out_01_stream.txt
+outputs PINN\t3 noise\notebook_outputs\cell_005_out_01_text.txt
+outputs PINN\t3 noise\notebook_outputs\cell_005_out_01.png
+outputs PINN\t3 noise\notebook_outputs\cell_005_out_02_text.txt
+outputs PINN\t3 noise\notebook_outputs\cell_005_out_02.png
+outputs PINN\t3 noise\notebook_outputs\cell_005_out_03_text.txt
+outputs PINN\t3 noise\notebook_outputs\cell_005_out_03.png
+outputs PINN\t3 noise\notebook_outputs\cell_006_out_01_stream.txt

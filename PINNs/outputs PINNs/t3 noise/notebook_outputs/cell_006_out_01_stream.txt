@@ -1,0 +1,3 @@
+Export terminé vers: C:\Users\gauti\OneDrive\Documents\UE H projet ML\Parameter learning in dynamical systems\outputs PINN\t3 noise
+Nombre de fichiers sauvegardés: 1
+Manifest: outputs PINN\t3 noise\saved_outputs_manifest.txt
