@@ -80,9 +80,9 @@ def decay_grad(grads, current_grad_idx, clip_value=np.array([25,10,10]), window=
     # --- weighted average ---
     smoothed_grad = np.sum(window_grads * weights[:, None], axis=0)
 
-    # grad_norm = smoothed_grad / (np.linalg.norm(smoothed_grad) + 1e-8)
+    grad_norm = smoothed_grad / (np.linalg.norm(smoothed_grad) + 1e-8)
 
-    return smoothed_grad
+    return grad_norm
 
 
 def main(window = 40, 
@@ -120,7 +120,7 @@ def main(window = 40,
 
 config = configparser.ConfigParser()
 config.read('config.ini')
-noise_var = config['Params_var_01'].getfloat('var')
+noise_var = config['Params_var_001'].getfloat('var')
 
 snr = compute_snr(observations, noise_var)
 print(f"Noise variance is {noise_var}")
@@ -166,7 +166,7 @@ def objective(trial):
 
 
 study = optuna.create_study(direction='minimize')
-study.optimize(objective, n_trials = 200)
+study.optimize(objective, n_trials = 250)
 
 
 print("Best trial:")
