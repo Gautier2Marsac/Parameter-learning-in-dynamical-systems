@@ -1,3 +1,0 @@
-Export terminé vers: C:\Users\gauti\OneDrive\Documents\UE H projet ML\Parameter learning in dynamical systems\PINNs\outputs PINNs\t3
-Nombre de fichiers sauvegardés: 21
-Manifest: outputs PINNs\t3\saved_outputs_manifest.txt

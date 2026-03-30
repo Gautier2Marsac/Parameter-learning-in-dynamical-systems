@@ -3,13 +3,17 @@ from scipy.integrate import solve_ivp
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-# 1. Le système de Lorenz
+# ==========================================
+# 1) Systeme dynamique de Lorenz
+# ==========================================
 def lorenz(t, x, sigma=10, beta=8/3, rho=28):
     return [sigma * (x[1] - x[0]), 
             x[0] * (rho - x[2]) - x[1], 
             x[0] * x[1] - beta * x[2]]
 
-# 2. Paramètres
+# ==========================================
+# 2) Parametres de l'experience WSINDy
+# ==========================================
 PSEUDO_PERIOD = 0.9 
 dts = [1.0, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1, 0.09, 0.08, 0.07, 0.06, 0.05, 0.04, 0.03, 0.02, 0.01, 0.005, 0.001]
 nb_loops = [0.1, 0.2, 0.3, 0.4, 0.5, 1, 2, 5, 10, 20, 50, 100]
@@ -26,6 +30,9 @@ error_matrix = np.zeros((len(dts), len(nb_loops)))
 
 print(f"Calcul Heatmap WSINDy ({n_trials} essais/case, Bruit={noise_level})...")
 
+# ==========================================
+# 3) Balayage des conditions (dt, duree)
+# ==========================================
 for i, dt in enumerate(dts):
     print(f"Traitement dt = {dt}")
     for j, loops in enumerate(nb_loops):
@@ -56,6 +63,7 @@ for i, dt in enumerate(dts):
         v = np.sin(np.pi * tau)**p_power
         v_dot = p_power * np.sin(np.pi * tau)**(p_power-1) * np.cos(np.pi * tau) * (np.pi / ((L - 1) * dt))
 
+        # Moyenne de plusieurs essais bruites pour stabiliser la metrique d'erreur
         for _ in range(n_trials):
             x_noisy = x_pure + noise_level * np.random.normal(size=x_pure.shape)
             
@@ -68,7 +76,7 @@ for i, dt in enumerate(dts):
 
             # --- CONSTRUCTION DES MATRICES INTÉGRALES ---
             # On fait glisser notre fenêtre sur les données
-            stride = max(1, (len(t_eval) - L) // n_windows) # On prend ~50 fenêtres pour aller vite
+            stride = max(1, (len(t_eval) - L) // n_windows)
             windows_starts = np.arange(0, len(t_eval) - L, stride)
             
             V_integral = np.zeros((len(windows_starts), Theta.shape[1]))
@@ -94,7 +102,8 @@ for i, dt in enumerate(dts):
                 for dim in range(3):
                     big_inds = ~small_inds[:, dim]
                     if np.sum(big_inds) > 0:
-                        M_sub = V_integral[:, big_inds].T @ V_integral[:, big_inds] + epsilon * np.eye(np.sum(big_inds))
+                        n_big = int(np.sum(big_inds))
+                        M_sub = V_integral[:, big_inds].T @ V_integral[:, big_inds] + epsilon * np.eye(n_big)
                         Xi[big_inds, dim] = np.linalg.solve(M_sub, V_integral[:, big_inds].T @ G_integral[:, dim])
 
             # --- EXTRACTION DES ERREURS ---
@@ -102,14 +111,19 @@ for i, dt in enumerate(dts):
                 s_est, r_est, b_est = Xi[2, 0], Xi[1, 1], -Xi[3, 2]
                 err = (abs(s_est-10)/10 + abs(r_est-28)/28 + abs(b_est-(8/3))/(8/3)) / 3 * 100
                 cell_errors.append(min(err, 100.0))
-            except:
+            except Exception:
                 cell_errors.append(100.0)
         
         error_matrix[i, j] = np.mean(cell_errors)
 
-# --- Affichage ---
+# ==========================================
+# 4) Visualisation finale : heatmap d'erreur
+# ==========================================
+dt_labels = [f"{dt:g}" for dt in dts]
+loop_labels = [f"{loops:g}" for loops in nb_loops]
+
 plt.figure(figsize=(10, 7))
-sns.heatmap(error_matrix, annot=True, fmt=".0f", cmap="YlGnBu", xticklabels=nb_loops, yticklabels=dts)
+sns.heatmap(error_matrix, annot=True, fmt=".0f", cmap="YlGnBu", xticklabels=loop_labels, yticklabels=dt_labels)
 plt.title(f"WSINDy 'Handmade' (Bruit={noise_level})")
 plt.xlabel("Boucles")
 plt.ylabel("dt")

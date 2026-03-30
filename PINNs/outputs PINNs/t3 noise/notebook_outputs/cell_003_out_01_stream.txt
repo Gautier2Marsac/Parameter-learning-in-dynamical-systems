@@ -1,2 +1,0 @@
-Paramètres initiaux : σ=8.00, ρ=20.00, β=2.00
-Nombre de paramètres réseau : 3331
