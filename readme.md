@@ -46,7 +46,7 @@ Une approche d'optimisation standard visant à minimiser l'erreur de reconstruct
 
 ---
 
-## 👤 Auteur
+## 👤 Auteurs
 
-**Gautier Tandeau de Marsac**
-Projet réalisé dans le cadre de la spécialité en ingénierie mathématique et computationnelle (IMT Atlantique).
+**Gautier Tandeau de Marsac, Victor Martin, Houcine Ayoubi**
+
